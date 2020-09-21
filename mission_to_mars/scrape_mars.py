@@ -1,5 +1,3 @@
-from flask import Flask, render_template
-import pymongo
 from splinter import Browser
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -13,18 +11,14 @@ def init_browser():
 def scrape():
     browser = init_browser()
 
-    mars_scrape = {}
 
     mn_url = 'https://mars.nasa.gov/news/'
     browser.visit(mn_url)
     html = browser.html
     mn_soup = BeautifulSoup(html, 'html.parser')
     # Retrieve the latest news title and paragraph
-    news_title = mn_soup.find_all('div', class_='content_title')[0].text
-    news_paragraph = mn_soup.find_all('div', class_='article_teaser_body')[0].text
-
-    mars_scrape['Title'] = news_title
-    mars_scrape['Paragraph'] = news_paragraph
+    news_title = mn_soup.find('div', class_='content_title')[0].text
+    news_paragraph = mn_soup.find('div', class_='article_teaser_body')[0].text
 
 
     jpl_url = 'https://www.jpl.nasa.gov'
@@ -35,16 +29,12 @@ def scrape():
     image_path = image_soup.find_all('img')[3]["src"]
     featured_img_url = jpl_url + image_path
 
-    mars_scrape['featured_image'] = featured_img_url
-
     url1 = "https://space-facts.com/mars/"
     tables = pd.read_html(url1)
     marsdf = tables[1]
     marsdf.columns = [
     'Mars - Earth Comparison','Mars', 'Earth']
     html_table = marsdf.to_html()
-
-    mars_scrape['table'] = html_table
 
 
     astro_url = "https://astrogeology.usgs.gov"
@@ -77,8 +67,14 @@ def scrape():
         
         hem_pic_url.append(hem_dict)
 
-    mars_scrape['Hemispheres'] = hem_pic_url
-
     browser.quit()
-    return mars_scrape
 
+    mars_scrape = {
+    "news_title": news_title,
+    "paragraph": news_paragraph,
+    "featured_image": featured_img_url,
+    "table": html_table,
+    "hemispheres": hem_pic_url
+    }   
+
+    return mars_scrape
